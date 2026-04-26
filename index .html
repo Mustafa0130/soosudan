@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سوق السودان</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a6b3c">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+    header {
+      background: linear-gradient(135deg, #1a6b3c, #2e7d32);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    header h1 { font-size: 24px; margin: 0; }
+    .search-bar {
+      margin: 10px 15px;
+      display: flex;
+      gap: 5px;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 25px;
+      font-size: 16px;
+      outline: none;
+    }
+    .search-bar button {
+      background: #ffb300;
+      border: none;
+      color: #000;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .products-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      padding: 15px;
+    }
+    .product-card {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card:hover { transform: translateY(-3px); }
+    .product-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      background: #eee;
+    }
+    .product-info {
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-name {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #1a6b3c;
+    }
+    .product-price {
+      color: #d32f2f;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .add-to-cart {
+      background: #1a6b3c;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: auto;
+      transition: 0.2s;
+    }
+    .add-to-cart:active { background: #0d4a28; }
+    .cart-icon {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      background: #ffb300;
+      color: #000;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 200;
+      border: none;
+    }
+    .cart-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: red;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cart-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top-left-radius: 25px;
+      border-top-right-radius: 25px;
+      padding: 20px;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 300;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .cart-panel.open { transform: translateY(0); }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .cart-item button {
+      background: #c62828;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 15px;
+      cursor: pointer;
+    }
+    .whatsapp-btn {
+      display: block;
+      width: 100%;
+      background: #25D366;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 15px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .empty-cart {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛒 سوق السودان</h1>
+    <p style="font-size:14px; margin:5px 0 0;">منتجات سودانية أصيلة</p>
+  </header>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="ابحث عن منتج...">
+    <button onclick="searchProducts()">بحث</button>
+  </div>
+
+  <div class="products-container" id="productsContainer"></div>
+
+  <!-- أيقونة السلة -->
+  <button class="cart-icon" onclick="toggleCart()">
+    🛒
+    <span class="cart-badge" id="cartCount" style="display: none;">0</span>
+  </button>
+
+  <!-- لوحة السلة -->
+  <div class="cart-panel" id="cartPanel">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3>🧺 سلة المشتريات</h3>
+      <button onclick="toggleCart()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✖</button>
+    </div>
+    <div id="cartItems"></div>
+    <button class="whatsapp-btn" onclick="sendWhatsApp()">📲 اطلب عبر واتساب</button>
+  </div>
+
+  <script>
+    // ========== قائمة المنتجات (عدّلها كما تريد) ==========
+    const products = [
+      { id: 1, name: "كركديه سوداني", price: 1500, image: "https://placehold.co/300x300/8B0000/white?text=كركديه" },
+      { id: 2, name: "قهوة جبل مرة", price: 2500, image: "https://placehold.co/300x300/5D4037/white?text=قهوة+جبل+مرة" },
+      { id: 3, name: "طحينة العمدة", price: 800, image: "https://placehold.co/300x300/D4AF37/white?text=طحينة" },
+      { id: 4, name: "صمغ عربي", price: 3000, image: "https://placehold.co/300x300/8D6E63/white?text=صمغ+عربي" },
+      { id: 5, name: "عسل سنط", price: 4500, image: "https://placehold.co/300x300/FFA000/white?text=عسل+سنط" },
+      { id: 6, name: "تمور بركاوي", price: 1200, image: "https://placehold.co/300x300/8B4513/white?text=تمور" },
+      { id: 7, name: "فول سوداني", price: 600, image: "https://placehold.co/300x300/C19A6B/white?text=فول+سوداني" },
+      { id: 8, name: "بخور سوداني", price: 2000, image: "https://placehold.co/300x300/4A148C/white?text=بخور" }
+    ];
+
+    let cart = [];
+
+    // عرض المنتجات
+    function displayProducts(list) {
+      const container = document.getElementById("productsContainer");
+      container.innerHTML = "";
+      list.forEach(product => {
+        const card = document.createElement("div");
+        card.className = "product-card";
+        card.innerHTML = `
+          <img src="${product.image}" alt="${product.name}" loading="lazy">
+          <div class="product-info">
+            <div class="product-name">${product.name}</div>
+            <div class="product-price">${product.price.toLocaleString()} ج.س</div>
+            <button class="add-to-cart" onclick="addToCart(${product.id})">➕ أضف للسلة</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // إضافة للسلة
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      const existing = cart.find(item => item.id === productId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+      updateCartUI();
+      // إظهار السلة تلقائياً
+      document.getElementById("cartPanel").classList.add("open");
+    }
+
+    // تحديث واجهة السلة
+    function updateCartUI() {
+      const countSpan = document.getElementById("cartCount");
+      const cartItemsDiv = document.getElementById("cartItems");
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+      if (totalItems > 0) {
+        countSpan.style.display = "flex";
+        countSpan.textContent = totalItems;
+      } else {
+        countSpan.style.display = "none";
+      }
+
+      if (cart.length === 0) {
+        cartItemsDiv.innerHTML = '<div class="empty-cart">السلة فارغة 🛒</div>';
+      } else {
+        cartItemsDiv.innerHTML = cart.map(item => `
+          <div class="cart-item">
+            <span>${item.name} (${item.quantity})</span>
+            <span>${(item.price * item.quantity).toLocaleString()} ج.س</span>
+            <button onclick="removeFromCart(${item.id})">❌</button>
+          </div>
+        `).join("");
+      }
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(item => item.id !== productId);
+      updateCartUI();
+    }
+
+    function toggleCart() {
+      document.getElementById("cartPanel").classList.toggle("open");
+    }
+
+    // إرسال طلب واتساب
+    function sendWhatsApp() {
+      if (cart.length === 0) {
+        alert("السلة فارغة! أضف منتجات أولاً.");
+        return;
+      }
+      let message = "مرحباً، أريد طلب المنتجات التالية:\n\n";
+      let total = 0;
+      cart.forEach(item => {
+        message += `- ${item.name} (${item.quantity}) : ${(item.price * item.quantity).toLocaleString()} ج.س\n`;
+        total += item.price * item.quantity;
+      });
+      message += `\n💰 الإجمالي: ${total.toLocaleString()} ج.س`;
+      // استبدل 249XXXXXXXXX برقم الواتساب الخاص بك (مع مفتاح السودان 249)
+      const phone = "249XXXXXXXXX"; // <-- غيّر الرقم هنا
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank");
+    }
+
+    // بحث بسيط
+    function searchProducts() {
+      const term = document.getElementById("searchInput").value.trim().toLowerCase();
+      if (term === "") {
+        displayProducts(products);
+        return;
+      }
+      const filtered = products.filter(p => p.name.toLowerCase().includes(term));
+      displayProducts(filtered);
+    }
+
+    // تحميل الصفحة
+    displayProducts(products);
+    updateCartUI();
+
+    // تسجيل Service Worker لجعل التطبيق PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log("SW skip", err));
+    }
+  </script>
+</body>
+</html>
